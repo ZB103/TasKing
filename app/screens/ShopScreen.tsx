@@ -4,7 +4,7 @@ import {
   Dimensions, StyleSheet, FlatList, Pressable,
 } from 'react-native';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 //npm install react-native-tab-view
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { NavigationContainer, NavigationIndependentTree } from '@react-navigation/native';
@@ -114,8 +114,9 @@ const Tab = createMaterialTopTabNavigator();
 const ShopScreen = () => {
   //Fetch user id
   const { user } = useContext(authContext);
-  //Fetch user data
+  //Fetch user & stat data
   const userDocRef = doc(FIREBASE_DB, "users", user.uid);
+  const statsRef = doc(FIREBASE_DB, "stats", user.uid);
 
   //Instantiate eqipped items
   const [equipped, setEquipped] = useState({});
@@ -133,6 +134,9 @@ const ShopScreen = () => {
 
   //Set background based on time of day
   const [bg, setBg] = useState("");
+
+  //Change coins spent statistics
+  const [coinSpent, setCoinSpent] = useState(0);
 
   //Fetch data from db
   useEffect(() => {
@@ -164,8 +168,17 @@ const ShopScreen = () => {
     }, (error) => {
       console.error("Error fetching data:", error);
     });
-
-    return () => unsubscribe(); // Cleanup the listener on component unmount
+    const unsub = onSnapshot(statsRef, (docSnap) => {
+      if (docSnap.exists()) {
+        //set starting data from db
+        setCoinSpent(docSnap.data().coinsSpent || 0);
+      } else {
+        console.log("No such user document!");
+      }
+    }, (error) => {
+      console.error("Error fetching data:", error);
+    });
+    return () => unsubscribe(), unsub(); // Cleanup the listener on component unmount
   }, [user]);
 
   // Update equipped item in db
@@ -236,6 +249,10 @@ const ShopScreen = () => {
   }, [userDocRef]);
 
   const updateOwned = useCallback((category, url, price) => {
+    //Get stats from db to update coins spent stat
+    const statsRef = doc(FIREBASE_DB, "stats", user.uid);
+    
+
     //add unlocked item to owned items in db and set price
     switch (category) {
       case "shirt":
@@ -282,6 +299,12 @@ const ShopScreen = () => {
       const newBalance = prev - price;
       setDoc(userDocRef, { balance: newBalance }, {merge: true});
       return newBalance;
+    });
+    //change coins spent stat
+    setCoinSpent((prev) => {
+      const newStat = prev + price;
+      setDoc(statsRef, { coinsSpent: newStat }, { merge: true });
+      return newStat;
     });
     return [];
   }, [userDocRef]);
