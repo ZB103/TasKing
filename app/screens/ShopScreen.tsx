@@ -164,7 +164,6 @@ const ShopScreen = () => {
     }, (error) => {
       console.error("Error fetching data:", error);
     });
-
     return () => unsubscribe(); // Cleanup the listener on component unmount
   }, [user]);
 

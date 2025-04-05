@@ -2,8 +2,8 @@ import React, { useState, useContext, useEffect } from 'react';
 import { StyleSheet, View, Button, Image, TextInput, Pressable, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FIREBASE_APP, FIREBASE_DB } from '@/firebaseConfig'
-import { doc, setDoc } from "firebase/firestore";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
+import { doc, setDoc, onSnapshot } from "firebase/firestore";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth, onAuthStateChanged } from 'firebase/auth';
 import { KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, } from 'react-native';
 import { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -54,12 +54,17 @@ const OpeningScreen = ({navigation}) => {
         // Clear input fields
         setEmail('');
         setPassword('');
+        setUsername('');
     }
 
     const signIn = async () => {
         try {
           const response = await signInWithEmailAndPassword(auth, email, password);
           console.log(response);
+
+          //send welcome message with isNewAccount set to false
+          welcomeMessage(false);
+
           handleTransition();
         } catch (error) {
           console.log(error);
@@ -106,14 +111,25 @@ const OpeningScreen = ({navigation}) => {
                     xp: 0
                 });
 
-                alert('Sign-up successful!');
+                //send welcome message with isNewAccount set to true
+                welcomeMessage(true);
+
                 setShowLogin(false);
                 setShowSignUp(false);
             } catch (error) {
                 console.log(error);
                 alert('Sign-up failed: ' + error.message);
             }
-    };
+  };
+
+  //Welcome or welcome back alert depending on whether account is new
+  const welcomeMessage = (isNewAccount) => {
+    //create message
+    const message = isNewAccount ?
+      "Welcome to TasKing! On the home page, swipe up for the task screen, and swipe down for the shop screen. Completing tasks awards points and experience, which can be used to unlock items in the shop and upgrade resolution in the menu. Friends and statistics can also be accessed in the menu, to help you make progress toward your goals. We're sure you'll find TasKing to be your new best friend. When you're ready, let's do this." :
+      "Welcome back to TasKing! Let's do this." ;
+    alert(message);
+  };
 
     return (
         <GestureHandlerRootView style={{flex: 1}}>

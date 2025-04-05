@@ -18,7 +18,7 @@ const SettingsScreen = ({ navigation }) => {
     try {
       await signOut(auth);
       console.log('User logged out successfully');
-      alert('User logged out successfully');
+      alert("See you soon! You've got this.");
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -30,7 +30,7 @@ const SettingsScreen = ({ navigation }) => {
       if (user) {
         const userRef = doc(db, 'users', user.uid);
         await updateDoc(userRef, { username: newUsername });
-        alert('Username updated successfully');
+        alert("Nice to meet you, " + newUsername + "!");
         console.log('Username updated successfully');
         setNewUsername('');
       }
@@ -44,7 +44,7 @@ const SettingsScreen = ({ navigation }) => {
       const user = auth.currentUser;
       if (user) {
         await updatePassword(user, newPassword);
-        alert('Password updated successfully');
+        alert('Password updated successfully!');
         console.log('Password updated successfully');
         setNewPassword('');
       }
